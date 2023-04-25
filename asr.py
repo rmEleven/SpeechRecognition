@@ -30,12 +30,12 @@ def recognize_speech_from_mic(recognizer, microphone):
 
     # adjust the recognizer sensitivity to ambient noise and record audio
     # from the microphone
-    print("开始监听麦克风...")
+    print("Start listening to the microphone...")
     with microphone as source:
         recognizer.adjust_for_ambient_noise(source)
-        print("请开始说话...")
-        audio = recognizer.listen(source, phrase_time_limit=10)
-    print("结束监听麦克风。")
+        print("Please start speaking...")
+        audio = recognizer.listen(source, phrase_time_limit=5)
+    print("End listening to microphone。")
 
     # set up the response object
     response = {
@@ -48,7 +48,8 @@ def recognize_speech_from_mic(recognizer, microphone):
     # if a RequestError or UnknownValueError exception is caught,
     #     update the response object accordingly
     try:
-        response["transcription"] = recognizer.recognize_google(audio, language='en-US')#recognizer.recognize_sphinx(audio)
+        print("Processing...")
+        response["transcription"] = recognizer.recognize_google(audio, language='en-US')
     except sr.RequestError:
         # API was unreachable or unresponsive
         response["success"] = False
@@ -65,6 +66,8 @@ class myWindow(QtWidgets.QMainWindow):
         super(myWindow, self).__init__()   # 调用父类的构造函数
         # 初始化变量 myCommand
         self.myCommand = ["play music", "open notepad"]
+        # 禁用最大化按钮
+        self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowMaximizeButtonHint)
 
         self.ui = Ui_MainWindow()          # 创建 Ui_MainWindow 实例
         self.ui.setupUi(self)              # 设置 UI 界面
@@ -81,7 +84,18 @@ class myWindow(QtWidgets.QMainWindow):
 
 
     def start_asr_thread(self, event):
+        # 启动语音识别线程
         self.asr_thread.start()
+
+
+    def play_music(self, audio_file=".\\Audios\\music.mp3"):
+        # 播放音乐
+        webbrowser.open(audio_file)
+
+    
+    def open_text(self, text_file=".\\Texts\\lyric.txt"):
+        # 打开文件
+        os.startfile(text_file)
 
 
     def listen_and_recognize(self):
@@ -103,14 +117,15 @@ class myWindow(QtWidgets.QMainWindow):
             # 显示识别结果
             response["transcription"] = response["transcription"].lower()
             print("You said: {}".format(response["transcription"]))
+
             if self.myCommand[0] in response["transcription"]:
-                # 当识别到指定关键词时执行相应的处理
+                # 播放音乐
                 print(self.myCommand[0], "detected!")
-                webbrowser.open('music.mp3')
+                self.play_music()
             elif self.myCommand[1] in response["transcription"]:
-                # 当识别到指定关键词时执行相应的处理
+                # 打开文件
                 print(self.myCommand[1], "detected!")
-                os.startfile(".\\text.txt")
+                self.open_text()
             else:
                 print("no command detected!")
 
